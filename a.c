@@ -30,6 +30,21 @@ void stampa_matrice(int **matrice, int dimensione) {
     printf("\n");
 }
 
+void dividi_matrice(int **matrice, int i_inizio, int i_fine, int j_inizio, int j_fine) {
+	int **divisa = malloc((i_fine - i_inizio + 3) * sizeof(int *));
+	for (int i = 0; i < i_fine - i_inizio + 3; i++) divisa[i] = malloc((j_fine - j_inizio + 3) * sizeof(int));
+	for (int i = i_inizio - 1; i <= i_fine + 1; i++) {
+		for (int j = j_inizio - 1; j <= j_fine + 1; j++) {
+			divisa[i - i_inizio + 1][j - j_inizio + 1] = matrice[i][j];
+			printf("%d\t", divisa[i - i_inizio + 1][j - j_inizio + 1]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+	for (int i = 0; i < i_fine - i_inizio + 3; i++) free(divisa[i]);
+    free(divisa);
+}
+
 void conferma_media(int **matrice, int somma, int i, int j) {
 	 float media = somma / 9.0;
      printf("Elemento [%d][%d]: %d -> Media 3x3: %.2f\n", i, j, matrice[i][j], media);
@@ -106,11 +121,7 @@ int main(int argc, char *argv[]) {
     printf("Colonne: %d %d %d\n", colonne, dimensione_colonna, colonne_grandi);
     printf("Righe: %d %d %d\n", righe, dimensione_riga, righe_grandi);
     
-    
-    
-    
-    
-    
+    dividi_matrice(A, 1, 1, 1, 1); 
     
     media_intorno_processo(A, dimensione_risultato + 2, dimensione_risultato + 2);
     
