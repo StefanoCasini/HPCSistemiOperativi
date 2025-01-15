@@ -29,19 +29,12 @@ void stampa_matrice(float **matrice, int dimensione) {
     printf("\n");
 }
 
-void dividi_matrice(float **matrice, int i_inizio, int i_fine, int j_inizio, int j_fine) {
+float **dividi_matrice(float **matrice, int i_inizio, int i_fine, int j_inizio, int j_fine) {
 	float **divisa = malloc((i_fine - i_inizio + 3) * sizeof(float *));
 	for (int i = 0; i < i_fine - i_inizio + 3; i++) divisa[i] = malloc((j_fine - j_inizio + 3) * sizeof(float));
-	for (int i = i_inizio - 1; i <= i_fine + 1; i++) {
-		for (int j = j_inizio - 1; j <= j_fine + 1; j++) {
-			divisa[i - i_inizio + 1][j - j_inizio + 1] = matrice[i][j];
-			printf("%f\t", divisa[i - i_inizio + 1][j - j_inizio + 1]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-	for (int i = 0; i < i_fine - i_inizio + 3; i++) free(divisa[i]);
-    free(divisa);
+	for (int i = i_inizio - 1; i <= i_fine + 1; i++) for (int j = j_inizio - 1; j <= j_fine + 1; j++)
+		divisa[i - i_inizio + 1][j - j_inizio + 1] = matrice[i][j];
+	return divisa;
 }
 
 void conferma_media(float **matrice, float somma, int i, int j) {
@@ -94,30 +87,71 @@ int main(int argc, char *argv[]) {
         printf("La dimensione deve essere un numero intero positivo.\n");
         return 1;
     }
-
-    int thread = 6;    
-
-	int dimensione_risultato = dimensione / 2;
-    float **A = alloca_inizializza_matrice(dimensione);
-
-    printf("Matrice in alto a sinistra %dx%d con bordo aggiunto:\n", dimensione_risultato, dimensione_risultato);
-    stampa_matrice(A, dimensione_risultato + 2);
     
-    int colonne = thread > dimensione_risultato ? dimensione_risultato : sqrt(thread);
-    int dimensione_colonna = dimensione_risultato / colonne;
-    int colonne_grandi = dimensione_risultato % colonne;
-    int righe = thread / colonne > dimensione_risultato ? dimensione_risultato : thread / colonne;
-    int dimensione_riga = dimensione_risultato / righe;
-   	int righe_grandi = dimensione_risultato % righe;
+    if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+        printf("Errore in MPI_Init\n");
+        return 1;
+    }
     
-    printf("Colonne: %d %d %d\n", colonne, dimensione_colonna, colonne_grandi);
-    printf("Righe: %d %d %d\n", righe, dimensione_riga, righe_grandi);
+    int size, rank;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    
+    printf("[Sono il processo %d di %d]\n", my_rank, size);
+    
+    int colonne, dimensione_colonna, colonne_grandi;
+    int righe, dimensione_righe, righe_grandi;
+    
+    if (rank == 0) {
+		int dimensione_risultato = dimensione / 2;
+		int dimensione_cornice= dimensione_risultato + 2;
+		float **A = alloca_inizializza_matrice(dimensione);
+
+		printf("Matrice in alto a sinistra %dx%d con bordo aggiunto:\n", dimensione_risultato, dimensione_risultato);
+		stampa_matrice(A, dimensione_cornice);
+		
+		colonne = size > dimensione_risultato ? dimensione_risultato : sqrt(size);
+	 	dimensione_colonna = dimensione_risultato / colonne;
+		colonne_grandi = dimensione_risultato % colonne;
+		righe = size / colonne > dimensione_risultato ? dimensione_risultato : size / colonne;
+		dimensione_riga = dimensione_risultato / righe;
+	   	righe_grandi = dimensione_risultato % righe;
+		
+		printf("Colonne: %d %d %d\n", colonne, dimensione_colonna, colonne_grandi);
+		printf("Righe: %d %d %d\n", righe, dimensione_riga, righe_grandi);
+		
+		MPI_Scatter(A, elementi, MPI_FLOAT, &partizioneA, elementi, MPI_FLOAT, 0, MPI_COMM_WORLD);
+		
+    }
+    else if (rank < colonne) {
+    	if (rank < colonne_grandi) {
+    		elementi = (dimensione_colonna + 1) * dimensione_cornice;
+    		scorrimento = (rank - 1) * (dimensione_colonna + 1);
+    	} else {
+    		elementi = dimensione_colonna * dimensione_cornice;
+    		scorrimento = colonne_grandi * (dimensione_colonna + 1) + (rank - 1 - colonne_grandi) * dimensione_colonna;
+    	}
+    	float **partizioneA = dividi_matrice(A, 1, dimensione_risultato, 1 + scorrimento, dimensione_colonna + scorrimento);
+    	MPI_Scatter(NULL, elementi, MPI_FLOAT, &partizioneA, elementi, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    }
+    if () {
+    
+    }
+    
     
     dividi_matrice(A, 1, 1, 1, 1); 
     
     media_intorno_processo(A, dimensione_risultato + 2, dimensione_risultato + 2);
     
+    if (MPI_Finalize() != MPI_SUCCESS) {
+        printf("Errore in MPI_Finalize\n");
+        return 1;
+    }
+    
     dealloca_matrice(A, dimensione_risultato + 2);
+    
+    for (int i = 0; i < i_fine - i_inizio + 3; i++) free(divisa[i]);
+    free(divisa);
 
     return 0;
 }

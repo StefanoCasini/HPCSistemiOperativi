@@ -165,39 +165,9 @@ int main(int argc, char *argv[])
     printf("Colonne: %d %d %d\n", colonne, dimensione_colonna, colonne_grandi);
     printf("Righe: %d %d %d\n", righe, dimensione_riga, righe_grandi);
 
-    // MPI INIT
-    if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
-    {
-        printf("Errore in MPI_Init\n");
-        return 1;
-    }
-
-    // Get number of processes and check that 4 processes are used
-    int size, my_rank;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    if (size > DIM)
-    {
-        printf("il numero di processi %d è maggiore della dimensione %d.\n", size, DIM);
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-
-    printf("[Sono il processo %d di %d]\n", my_rank, size);
-
-
-
-    
-
     dividi_matrice(A, 1, 1, 1, 1);
 
     media_intorno_processo(A, dimensione_risultato + 2, dimensione_risultato + 2);
-
-    // MPI FINALIZE
-    if (MPI_Finalize() != MPI_SUCCESS)
-    {
-        printf("Errore in MPI_Finalize\n");
-        return 1;
-    }
 
     dealloca_matrice(A, dimensione_risultato + 2);
 
