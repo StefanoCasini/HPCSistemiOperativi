@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --account=tra24_IngInfBO
+#SBATCH --account=tra24_IngInfB2
 #SBATCH --partition=g100_usr_prod
 #SBATCH --nodes=5
 #SBATCH --ntasks-per-node=1
