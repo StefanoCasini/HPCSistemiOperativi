@@ -7,4 +7,4 @@
 #SBATCH -o job.out
 #SBATCH -e job.err
 module load autoload intelmpi
-srun ./MPI 5
+srun ./MPI 10
