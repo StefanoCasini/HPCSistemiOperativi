@@ -90,16 +90,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (rank == 0)
-    {
-        for (int i = 0; i < len_r; i++)
-        {
-            if (!(i % dim_res))
-                printf("\n");
-            printf("%f\t", r[i]);
-        }
-        printf("\n");
-    }
+    // if (rank == 0)
+    // {
+    //     for (int i = 0; i < len_r; i++)
+    //     {
+    //         if (!(i % dim_res))
+    //             printf("\n");
+    //         printf("%f\t", r[i]);
+    //     }
+    //     printf("\n");
+    // }
 
     if (MPI_Barrier(MPI_COMM_WORLD) != MPI_SUCCESS)
     {

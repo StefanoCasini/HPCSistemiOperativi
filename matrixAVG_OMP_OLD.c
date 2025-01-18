@@ -1,7 +1,7 @@
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <omp.h>
 
 float **create_matrix(int dim) {
     float **matrice = malloc(dim * sizeof(float *));
@@ -24,7 +24,7 @@ void show_matrix(float **m, int dim) {
     printf("\n");
 }
 
-float first_sum_adj(float **m, float old_sum, int i, int j) {
+float first_sum_adj(float **m, int i, int j) {
 	float sum = 0;
 	for (int ik = -1; ik < 2; ik++) for (int jk = -1; jk < 2; jk++) sum += m[i + ik][j + jk];
 	return sum;
@@ -43,7 +43,7 @@ float shift_sum_adj(float **m, float old_sum, int i_from, int j_from, int i_to, 
     return sum;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
     if (argc < 2) {
         printf("Utilizzo: %s <dimensione>\n", argv[0]);
         return 1;
@@ -57,6 +57,10 @@ int main(int argc, char *argv[]) {
     }
     
     double start = omp_get_time();
+
+    float **m = create_matrix(dim_frm);
+    float **r = create_matrix(dim_res);
+    int size = omp_get_num_threads();
     
 	int cols = size > dim_res ? dim_res : sqrt(size);
 	int dim_col = dim_res / cols;
@@ -65,9 +69,6 @@ int main(int argc, char *argv[]) {
 	int dim_row = dim_res / rows;
 	int big_rows = dim_res % rows;
 	
-	float **m = create_matrix(dim_frm);
-    float **r = create_matrix(dim_res);
-    int size = omp_get_num_threads();
 	omp_set_nested(1);
     
     #pragma omp parallel num_threads(cols) shared(m, r) {
@@ -100,8 +101,8 @@ int main(int argc, char *argv[]) {
     }
     
     show_matrix(r, dim_res);
-    free_matrix(m, dim_res + 2)
-    free_matrix(r, dim_res)
+    free_matrix(m, dim_frm);
+    free_matrix(r, dim_res);
     
     double end = omp_get_time();
     printf("Dimensione Matrice: %d\nNumero Processi: %d\nTempo Impiegato: %f\n", dim, size, end - start);
