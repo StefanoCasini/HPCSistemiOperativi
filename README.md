@@ -44,3 +44,4 @@ Inoltre, dovrà essere sempre misurato il tempo di esecuzione.
     - ALTERNATIVA -> cercare di improntare una soluzione sulla base dei quadrati che avevamo pensato inizialmente, probabilmente è fattibile, sfruttando una caratteristica di Scatterv (da controllare però), soluzione meno facile da implementare
 
 - OMP -> problemi su calcolo numero di colonne e di righe, (da segmentation fault siccome ci sono errori negli indici), compila se la graffa dopo pragma è messa nella linea sotto (a capo)
+    - aggiungere parte che se il numero di thread è maggiore del numero di elementi usa al massimo un thread per elemento      

@@ -93,26 +93,31 @@ int main(int argc, char **argv)
     float **m = create_matrix(dim_frm);
     float **r = create_matrix(dim_res);
 
-    //int cols = size > dim_res ? dim_res : sqrt(size);
-    int cols = size > dim_res*dim_res ? dim_res*dim_res : sqrt(size);
+    int cols = size > dim_res ? dim_res : sqrt(size);
     int dim_col = dim_res / cols;
     int big_cols = dim_res % cols;
-    //int rows = size / cols > dim_res ? dim_res : size / cols;
-    int rows = size / cols + size % cols; 
-    int dim_row = dim_res / rows;
-    int big_rows = dim_res % rows;
+    // int rows = size / cols > dim_res ? dim_res : size / cols;
+    // int dim_row = dim_res / rows;
+    // int big_rows = dim_res % rows;
+
+    int threadsInCol = size/cols;
+    int big_threadsInCol = size%cols;
 
     printf("cols: %d\n", cols);
     printf("dim_col: %d\n", dim_col);
     printf("big_cols: %d\n", big_cols);
-    printf("rows: %d\n", rows);
-    printf("dim_row: %d\n", dim_row);
-    printf("big_rows: %d\n", big_rows);
+    printf("threadsInCol: %d\n", threadsInCol);
+    // printf("dim_row: %d\n", dim_row);
+    printf("big_threadsInCol: %d\n", big_threadsInCol);
 
     omp_set_nested(1);
-#pragma omp parallel num_threads(cols) shared(m, r, dim_col, big_cols, big_rows, dim_row, rows)
+#pragma omp parallel num_threads(cols) shared(m, r, dim_col, big_cols, big_threadsInCol, threadsInCol)
     {
         int rank = omp_get_thread_num();
+
+
+        int subthreads = rank > big_threadsInCol ?  threadsInCol + 1 : threadsInCol;
+
         int shift = rank * (dim_col + 1);
         if (rank > big_cols)
             shift += (rank - big_cols) * dim_col;
@@ -122,7 +127,7 @@ int main(int argc, char **argv)
         printf("[RANK %d]: %d, %d, %d\n", rank, j_from, j_to, shift);
 
 // Nested pragma
-#pragma omp parallel num_threads(rows) shared(j_from, j_to, m, r, big_rows, dim_row)
+#pragma omp parallel num_threads(subthreads) shared(j_from, j_to, m, r, big_rows, dim_row)
         {
             printf("[PRAGMA 2]ALIVE\n");
             // int nst_rank = omp_get_thread_num();
