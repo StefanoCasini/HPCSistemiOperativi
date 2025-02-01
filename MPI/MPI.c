@@ -43,9 +43,10 @@ int main(int argc, char **argv) {
         else m[i] = (float)rand() / RAND_MAX;
     }
     int base_rows = dim_res / size;
+    printf("base_rows %d", base_rows);
 	int extra_rows = dim_res % size;
 	int max_rows = extra_rows ? base_rows + 1 : base_rows;
-	float *input = malloc((max_rows + 2) * dim_res * sizeof(float));
+	float *input = malloc((max_rows + 2) * (dim_res + 2) * sizeof(float));
     float *output = malloc(max_rows * dim_res * sizeof(float));
 	int rows = base_rows + 1;
 	bool extra = true;
@@ -62,15 +63,28 @@ int main(int argc, char **argv) {
 		recv_offset += rows * dim_res;
 	}
 
+    if (rank == 0){
+        for (int i = 0; i < len_m; i++) {
+		if (!(i % (dim_res + 2))) printf("\n");
+		    printf("%f\t", m[i]);
+        }
+        printf("\n\n\n\n");
+    }
+
+    
+
+
+
 	/*if (MPI_Scatterv(m, send_recv_counts, displs, MPI_FLOAT, input, send_recv_counts, MPI_FLOAT, 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
         printf("Errore in MPI_Scatter\n");
         return 1;
     }*/
-    if (MPI_Scatterv(m, send_counts, send_displs, MPI_FLOAT, input, recv_counts[rank], MPI_FLOAT, 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
+    if (MPI_Scatterv(m, send_counts, send_displs, MPI_FLOAT, input, send_counts[rank], MPI_FLOAT, 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
 		printf("Errore in MPI_Scatterv\n");
 		return 1;
 	}	
-	
+    
+
     /*float sum = input[1] + input[2] +
     		input[(dim_res + 2) + 1] + input[(dim_res + 2) + 2] +
     		input[2 * (dim_res + 2) + 1] + input[2 * (dim_res + 2) + 2];
@@ -84,7 +98,7 @@ int main(int argc, char **argv) {
     	float sum = input[i * (dim_res + 2) + 1] + input[i * (dim_res + 2) + 2] +
     				input[(i + 1) * (dim_res + 2) + 1] + input[(i + 1) * (dim_res + 2) + 2] +
     				input[(i + 2) * (dim_res + 2) + 1] + input[(i + 2) * (dim_res + 2) + 2];
-		output[0] = sum / 9.0;
+		output[i*dim_res] = sum / 9.0;
 		int first_line = i * (dim_res + 2);
 		for (int j = 2; j < dim_res + 1; j++) {
 		    for (int k = 0; k <= 2; k++) {
@@ -99,18 +113,18 @@ int main(int argc, char **argv) {
         printf("Errore in MPI_Gather\n");
         return 1;
     }*/
-    if (MPI_Gatherv(output, send_counts[rank], MPI_FLOAT, r, recv_counts, recv_displs, MPI_FLOAT, 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
+    if (MPI_Gatherv(output, recv_counts[rank], MPI_FLOAT, r, recv_counts, recv_displs, MPI_FLOAT, 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
 		printf("Errore in MPI_Gatherv\n");
 		return 1;
 	}
     
-    /*if (rank == 0) {
+    if (rank == 0) {
     	for (int i = 0; i < len_r; i++) {
 		    if (!(i % dim_res)) printf("\n");
 		    printf("%f\t", r[i]);
         }
         printf("\n");
-    }*/
+    }
     /*if (MPI_Barrier(MPI_COMM_WORLD) != MPI_SUCCESS) {
         printf("Errore in MPI_Barrier\n");
         return 1;
