@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 		printf("Errore in MPI_Init\n");
 		return 1; // MPI_Abort(MPI_COMM_WORLD, 1);
 	}
-	double start_computation = 0, start_total = 0, end_computation = 0, end_total = 0;
+	double start_computation = 0, start_total = 0, end_computation = 0, end_total = 0, start_thread = 0, end_thread = 0;
 	int rank, size;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -75,7 +75,6 @@ int main(int argc, char **argv)
 				m[i] = (float)rand() / RAND_MAX;
 		}
 	}
-
 
 	send_counts = (int *)malloc(size * sizeof(int));
 	send_displs = (int *)malloc(size * sizeof(int));
@@ -164,17 +163,15 @@ int main(int argc, char **argv)
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	if (rank == 0)
-	{
 		end_computation = MPI_Wtime();
-	}
 
 	free_all(m, r, send_counts, send_displs, recv_counts, recv_displs, input, output, rank, true);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	if (rank == 0)
 	{
-		end_computation = MPI_Wtime();
-		printf("%d;%d;%f;%f\n", dim, size, end_total - start_total, end_computation - end_computation);
+		end_total = MPI_Wtime();
+		printf("%d;%d;%f;%f\n", dim, size, end_total - start_total, end_computation - start_computation);
 	}
 	if (MPI_Finalize() != MPI_SUCCESS)
 	{

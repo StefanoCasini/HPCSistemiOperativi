@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     }
 
     float **m = create_matrix(dim_frm, (dim % 2));
-    //float **r = create_matrix(dim_res, false);
+    // float **r = create_matrix(dim_res, false);
 
     float **r = malloc(dim * sizeof(float *));
     for (int i = 0; i < dim; i++)
@@ -82,25 +82,21 @@ int main(int argc, char **argv)
 
     double start_computation = omp_get_wtime();
 
-#pragma omp parallel num_threads(size) shared(m, r, size, dim_res)
-    {
-        int rank = omp_get_thread_num();
-#pragma omp for schedule(static, 1)
+#pragma omp parallel for num_threads(size) shared(m, r, dim_res) schedule(static, 1)
         for (int i = 0; i < dim_res; i++)
+        {
             for (int j = 0; j < dim_res; j++)
             {
                 int i_m = i * 2 + 1;
                 int j_m = j * 2 + 1;
-                r[i][j] = sum_adj(m, i_m, j_m)/9.0;
+                r[i][j] = sum_adj(m, i_m, j_m) / 9.0;
             }
-    }
-
+        }
     // show_matrix(m, dim_frm);
     // show_matrix(r, dim_res);
     double end_computation = omp_get_wtime();
     free_matrix(m, dim_frm);
     free_matrix(r, dim_res);
-
 
     double end_totale = omp_get_wtime();
     printf("%d;%d;%f;%f\n", dim, size, end_totale - start_total, end_computation - start_computation);
